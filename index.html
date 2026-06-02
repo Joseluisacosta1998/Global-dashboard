@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TradeDash</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#070a10; --surf:#0c1118; --border:#1a2535;
+  --hl:#00e5ff; --lt:#a78bfa; --at:#ff6b35;
+  --green:#00ff87; --red:#ff3b5c; --yellow:#ffd166;
+  --text:#dde6f0; --muted:#4a6080;
+  --mono:'Space Mono',monospace; --disp:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+
+/* HEADER */
+.hdr{height:48px;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:8px}
+.hdr-logo{font-family:var(--disp);font-size:15px;font-weight:800;color:#fff;flex:1}
+.hdr-time{font-size:9px;color:var(--muted)}
+.hdr-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.hdr-dot.live{background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.icon-btn{width:32px;height:32px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.icon-btn:active{border-color:var(--hl);color:var(--hl)}
+.icon-btn.spin{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TABS */
+.tabs{height:46px;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;height:100%;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--muted);font-size:9px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.tab .ti{font-size:15px}
+.tab.on{color:var(--hl);border-bottom-color:var(--hl)}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.pg{display:none;position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px 12px 70px}
+.pg.on{display:block}
+.pg::-webkit-scrollbar{width:2px}
+.pg::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* SECTION TITLE */
+.stitle{font-family:var(--disp);font-size:12px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sline{flex:1;height:1px;background:var(--border)}
+
+/* EXCHANGE BADGES */
+.xb{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:.07em}
+.xb.hl{background:rgba(0,229,255,.1);color:var(--hl);border:1px solid rgba(0,229,255,.2)}
+.xb.lt{background:rgba(167,139,250,.1);color:var(--lt);border:1px solid rgba(167,139,250,.2)}
+.xb.at{background:rgba(255,107,53,.1);color:var(--at);border:1px solid rgba(255,107,53,.2)}
+
+/* CARDS */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.cgrid.c3{grid-template-columns:1fr 1fr 1fr}
+.cgrid.c1{grid-template-columns:1fr}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px;position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0}
+.card.chl::after{background:var(--hl)}.card.clt::after{background:var(--lt)}.card.cat::after{background:var(--at)}
+.card.cg::after{background:var(--green)}.card.cr::after{background:var(--red)}.card.cy::after{background:var(--yellow)}
+.clabel{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.cval{font-family:var(--disp);font-size:19px;font-weight:800;color:#fff;line-height:1}
+.csub{font-size:9px;color:var(--muted);margin-top:3px}
+
+/* TABLE CARD */
+.tcard{background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.thead{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ttitle{font-family:var(--disp);font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}
+.twrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:360px}
+th{text-align:left;padding:6px 10px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:rgba(0,0,0,.2);white-space:nowrap}
+td{padding:8px 10px;font-size:11px;border-bottom:1px solid rgba(26,37,53,.5);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.sl{color:var(--green);font-weight:700}.ss{color:var(--red);font-weight:700}
+
+/* EMPTY */
+.empty{text-align:center;padding:28px 12px;color:var(--muted)}
+.ei{font-size:26px;opacity:.4;margin-bottom:8px}
+.empty p{font-size:11px}
+
+/* ALERTS */
+.alert{padding:9px 12px;border-radius:8px;font-size:11px;line-height:1.6;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start}
+.alert.info{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);color:var(--hl)}
+.alert.warn{background:rgba(255,209,102,.05);border:1px solid rgba(255,209,102,.18);color:var(--yellow)}
+.alert.err{background:rgba(255,59,92,.06);border:1px solid rgba(255,59,92,.18);color:var(--red)}
+
+/* CONFIG */
+.cblock{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.cblock h3{font-family:var(--disp);font-size:12px;font-weight:700;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.field{margin-bottom:9px}
+.field label{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:6px;font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--hl)}
+.field input::placeholder{color:var(--muted)}
+.sbtn{width:100%;padding:10px;border:none;border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.07em;transition:opacity .15s}
+.sbtn:active{opacity:.8}
+.sbtn.shl{background:var(--hl);color:var(--bg)}.sbtn.slt{background:var(--lt);color:var(--bg)}.sbtn.sat{background:var(--at);color:#fff}
+.sok{color:var(--green);font-size:10px;margin-top:6px;display:none;text-align:center}
+
+/* TOGGLE */
+.ar-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surf);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;cursor:pointer}
+.ar-lbl{font-size:11px}
+.tog{width:36px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background .2s}
+.tog.on{background:var(--hl)}
+.knob{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s}
+.tog.on .knob{left:20px}
+
+/* CALENDAR */
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calnav button{background:none;border:1px solid var(--border);color:var(--text);padding:4px 12px;border-radius:5px;cursor:pointer;font-family:var(--mono);font-size:13px}
+.calmonth{font-family:var(--disp);font-weight:700;font-size:13px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px}
+.caldh{text-align:center;font-size:8px;color:var(--muted);padding:3px 0;letter-spacing:.08em;text-transform:uppercase}
+.calday{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;font-size:10px;border:1px solid transparent;transition:all .1s;background:var(--bg);min-height:36px}
+.calday:active{opacity:.7}
+.calday.empty{opacity:.12;pointer-events:none}
+.calday.today{border-color:var(--hl)}
+.calday.profit{background:rgba(0,255,135,.07);border-color:rgba(0,255,135,.35)}
+.calday.loss{background:rgba(255,59,92,.07);border-color:rgba(255,59,92,.35)}
+.caldn{font-size:10px}
+.calpnl{font-size:7px;font-weight:700;margin-top:2px}
+
+/* CHART */
+.chwrap{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.chhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.chtitle{font-family:var(--disp);font-size:11px;font-weight:700}
+.rbtns{display:flex;gap:3px}
+.rb{padding:3px 9px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s}
+.rb.on{border-color:var(--hl);color:var(--hl);background:rgba(0,229,255,.08)}
+
+/* TX */
+.txitem{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid rgba(26,37,53,.5)}
+.txitem:last-child{border-bottom:none}
+.txico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;margin-right:8px;flex-shrink:0}
+.dep .txico{background:rgba(0,255,135,.1)}.wit .txico{background:rgba(255,59,92,.1)}
+.txleft{display:flex;align-items:center}
+.txtype{font-size:11px;font-weight:700}.txdate{font-size:9px;color:var(--muted);margin-top:1px}
+.txamt{font-size:12px;font-weight:700}
+
+/* INNER TABS */
+.itabs{display:flex;gap:3px;margin-bottom:10px;flex-wrap:wrap}
+.itab{padding:4px 11px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s}
+.itab.on{border-color:var(--hl);color:var(--hl);background:rgba(0,229,255,.08)}
+
+/* ERROR BOX */
+.errbox{background:rgba(255,59,92,.07);border:1px solid rgba(255,59,92,.25);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--red);margin-bottom:10px;display:none}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">⚡ TradeDash</div>
+    <div class="hdr-dot" id="hdot"></div>
+    <span class="hdr-time" id="htime">—</span>
+    <button class="icon-btn" id="rfbtn" onclick="fetchAll()" title="Actualizar">↻</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabbar">
+    <div class="tab on" onclick="go('overview',this)"><span class="ti">◈</span>Overview</div>
+    <div class="tab" onclick="go('pnl',this)"><span class="ti">📈</span>PnL</div>
+    <div class="tab" onclick="go('positions',this)"><span class="ti">⊞</span>Posiciones</div>
+    <div class="tab" onclick="go('calendar',this)"><span class="ti">📅</span>Calendario</div>
+    <div class="tab" onclick="go('transfers',this)"><span class="ti">⇅</span>Transf.</div>
+    <div class="tab" onclick="go('config',this)"><span class="ti">⚙</span>Config</div>
+  </div>
+
+  <div class="pages">
+
+    <!-- OVERVIEW -->
+    <div class="pg on" id="pg-overview">
+      <div class="cgrid c3">
+        <div class="card chl"><div class="clabel">Hyperliquid</div><div class="cval" id="v-hlbal">—</div><div class="csub">Equity</div></div>
+        <div class="card clt"><div class="clabel">Lighter</div><div class="cval" id="v-ltbal">—</div><div class="csub">Balance</div></div>
+        <div class="card cat"><div class="clabel">Aster</div><div class="cval" id="v-atbal">—</div><div class="csub">Balance</div></div>
+      </div>
+      <div class="cgrid">
+        <div class="card cg"><div class="clabel">Total Equity</div><div class="cval" id="v-total">—</div><div class="csub">3 exchanges</div></div>
+        <div class="card cy"><div class="clabel">PnL No Real.</div><div class="cval" id="v-unreal">—</div><div class="csub">Posiciones abiertas</div></div>
+        <div class="card cg"><div class="clabel">PnL Hoy</div><div class="cval" id="v-today">—</div><div class="csub">Realizado hoy</div></div>
+        <div class="card chl"><div class="clabel">Posiciones</div><div class="cval" id="v-opencnt">—</div><div class="csub">Abiertas total</div></div>
+      </div>
+      <div id="errov" class="errbox"></div>
+      <div class="tcard">
+        <div class="thead"><div class="ttitle">Últimos Trades</div></div>
+        <div id="v-recent"><div class="empty"><div class="ei">📊</div><p>Pulsa ↻ para cargar</p></div></div>
+      </div>
+    </div>
+
+    <!-- PNL -->
+    <div class="pg" id="pg-pnl">
+      <div class="cgrid">
+        <div class="card cg"><div class="clabel">PnL Realizado</div><div class="cval" id="v-totalreal">—</div><div class="csub">Histórico</div></div>
+        <div class="card cy"><div class="clabel">Fees Pagadas</div><div class="cval" id="v-fees">—</div><div class="csub">Acumuladas</div></div>
+        <div class="card chl"><div class="clabel">PnL HL</div><div class="cval" id="v-hlpnl">—</div><div class="csub">Hyperliquid</div></div>
+        <div class="card clt"><div class="clabel">PnL LT</div><div class="cval" id="v-ltpnl">—</div><div class="csub">Lighter</div></div>
+      </div>
+      <div class="cgrid c1">
+        <div class="card cat"><div class="clabel">PnL Aster</div><div class="cval" id="v-atpnl">—</div><div class="csub">Aster DEX</div></div>
+      </div>
+      <div class="chwrap">
+        <div class="chhead">
+          <div class="chtitle">Equity Curve (PnL acumulado)</div>
+          <div class="rbtns">
+            <button class="rb on" onclick="setRange('7d',this)">7D</button>
+            <button class="rb" onclick="setRange('30d',this)">30D</button>
+            <button class="rb" onclick="setRange('all',this)">ALL</button>
+          </div>
+        </div>
+        <canvas id="pnlcv" height="170"></canvas>
+      </div>
+      <div class="itabs">
+        <button class="itab on" onclick="setPnlTab('hl',this)">Hyperliquid</button>
+        <button class="itab" onclick="setPnlTab('lt',this)">Lighter</button>
+        <button class="itab" onclick="setPnlTab('at',this)">Aster</button>
+      </div>
+      <div class="tcard" id="v-pnltable"><div class="empty"><div class="ei">📋</div><p>Sin datos aún</p></div></div>
+    </div>
+
+    <!-- POSITIONS -->
+    <div class="pg" id="pg-positions">
+      <div class="stitle"><span class="xb hl">HYPERLIQUID</span><div class="sline"></div></div>
+      <div class="tcard" id="v-hlpos"><div class="empty"><div class="ei">⊞</div><p>Sin posiciones</p></div></div>
+      <div class="stitle"><span class="xb lt">LIGHTER</span><div class="sline"></div></div>
+      <div class="tcard" id="v-ltpos"><div class="empty"><div class="ei">⊞</div><p>Sin posiciones</p></div></div>
+      <div class="stitle"><span class="xb at">ASTER</span><div class="sline"></div></div>
+      <div class="tcard" id="v-atpos"><div class="empty"><div class="ei">⊞</div><p>Sin posiciones</p></div></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="pg" id="pg-calendar">
+      <div class="tcard" style="padding:12px">
+        <div class="calnav">
+          <button onclick="calPrev()">◀</button>
+          <div class="calmonth" id="v-calmonth">—</div>
+          <button onclick="calNext()">▶</button>
+        </div>
+        <div class="calgrid" id="v-calgrid"></div>
+        <div style="display:flex;gap:10px;font-size:9px;color:var(--muted);flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:rgba(0,255,135,.2);border:1px solid rgba(0,255,135,.4);border-radius:2px;display:inline-block"></span>Ganancia</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:rgba(255,59,92,.2);border:1px solid rgba(255,59,92,.4);border-radius:2px;display:inline-block"></span>Pérdida</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border:1px solid var(--hl);border-radius:2px;display:inline-block"></span>Hoy</span>
+        </div>
+      </div>
+      <div class="tcard" id="v-caldetail">
+        <div class="thead"><div class="ttitle" id="v-caldt">Toca un día</div></div>
+        <div class="empty"><div class="ei">📅</div><p>Selecciona un día del calendario</p></div>
+      </div>
+    </div>
+
+    <!-- TRANSFERS -->
+    <div class="pg" id="pg-transfers">
+      <div class="cgrid c3">
+        <div class="card cg"><div class="clabel">Depósitos</div><div class="cval" id="v-dep">—</div></div>
+        <div class="card cr"><div class="clabel">Retiros</div><div class="cval" id="v-wit">—</div></div>
+        <div class="card cy"><div class="clabel">Neto</div><div class="cval" id="v-net">—</div></div>
+      </div>
+      <div class="stitle"><span class="xb hl">HYPERLIQUID</span><div class="sline"></div></div>
+      <div class="tcard" id="v-hltx"><div class="empty"><div class="ei">⇅</div><p>Sin historial</p></div></div>
+      <div class="stitle"><span class="xb lt">LIGHTER</span><div class="sline"></div></div>
+      <div class="tcard" id="v-lttx"><div class="empty"><div class="ei">⇅</div><p>Sin historial</p></div></div>
+      <div class="stitle"><span class="xb at">ASTER</span><div class="sline"></div></div>
+      <div class="tcard" id="v-attx"><div class="empty"><div class="ei">⇅</div><p>Sin historial</p></div></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="pg" id="pg-config">
+      <div class="alert info">ℹ️ Tus datos se guardan solo en este dispositivo (localStorage). Nunca salen del navegador.</div>
+
+      <div class="ar-row" onclick="toggleAR()">
+        <span class="ar-lbl">🔄 Auto-refresh cada 30s</span>
+        <div class="tog" id="artog"><div class="knob"></div></div>
+      </div>
+
+      <!-- HYPERLIQUID -->
+      <div class="cblock">
+        <h3><span class="xb hl">HYPERLIQUID</span> — Solo lectura pública</h3>
+        <div class="alert info" style="margin-bottom:10px">✅ Hyperliquid no requiere API key. Solo tu wallet address (0x...).</div>
+        <div class="field">
+          <label>Wallet Address</label>
+          <input id="hl_addr" type="text" placeholder="0xTuDirecciónCompleta...">
+        </div>
+        <button class="sbtn shl" onclick="saveCfg('hl')">Guardar y Probar Conexión HL</button>
+        <div class="sok" id="ok-hl">✓ Guardado</div>
+        <div class="errbox" id="err-hl"></div>
+      </div>
+
+      <!-- LIGHTER -->
+      <div class="cblock">
+        <h3><span class="xb lt">LIGHTER</span></h3>
+        <div class="alert info" style="margin-bottom:10px">ℹ️ Para datos de lectura solo necesitas tu Account Index (el número de cuenta, generalmente 0).</div>
+        <div class="field">
+          <label>Account Index (número de cuenta)</label>
+          <input id="lt_idx" type="number" placeholder="0">
+        </div>
+        <div class="field">
+          <label>L1 Address (opcional, para verificación)</label>
+          <input id="lt_addr" type="text" placeholder="0x...">
+        </div>
+        <button class="sbtn slt" onclick="saveCfg('lt')">Guardar y Probar Conexión LT</button>
+        <div class="sok" id="ok-lt">✓ Guardado</div>
+        <div class="errbox" id="err-lt"></div>
+      </div>
+
+      <!-- ASTER -->
+      <div class="cblock">
+        <h3><span class="xb at">ASTER</span></h3>
+        <div class="alert warn" style="margin-bottom:10px">⚠️ Aster requiere API Key + Secret (firma HMAC-SHA256). Si hay error CORS, activa la extensión "CORS Unblock" en tu navegador.</div>
+        <div class="field">
+          <label>API Key</label>
+          <input id="at_key" type="text" placeholder="Tu API Key de Aster">
+        </div>
+        <div class="field">
+          <label>API Secret</label>
+          <input id="at_sec" type="password" placeholder="Tu API Secret">
+        </div>
+        <button class="sbtn sat" onclick="saveCfg('at')">Guardar y Probar Conexión AT</button>
+        <div class="sok" id="ok-at">✓ Guardado</div>
+        <div class="errbox" id="err-at"></div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+</div><!-- /shell -->
+
+<script>
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+const S = {
+  hl:{ bal:null, pos:[], trades:[], tx:[], ok:false, err:'' },
+  lt:{ bal:null, pos:[], trades:[], tx:[], ok:false, err:'' },
+  at:{ bal:null, pos:[], trades:[], tx:[], ok:false, err:'' },
+  byDay:{},
+  calY:new Date().getFullYear(), calM:new Date().getMonth(),
+  range:'7d', pnlTab:'hl',
+  arOn:false, arTimer:null,
+};
+
+const HL = 'https://api.hyperliquid.xyz/info';
+const LT = 'https://mainnet.zklighter.elliot.ai';
+const AT = 'https://fapi.asterdex.com';
+
+// ══════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════
+function go(id, el) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  el.classList.add('on');
+  el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  if(id==='calendar') renderCal();
+  if(id==='pnl') drawChart();
+}
+
+// ══════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════
+const FLDS = { hl:['hl_addr'], lt:['lt_idx','lt_addr'], at:['at_key','at_sec'] };
+
+function loadCfg() {
+  Object.values(FLDS).flat().forEach(k=>{
+    const el=document.getElementById(k), v=localStorage.getItem(k);
+    if(el&&v) el.value=v;
+  });
+  if(localStorage.getItem('ar')==='1'){S.arOn=false;toggleAR();}
+}
+
+function saveCfg(ex) {
+  FLDS[ex].forEach(k=>{
+    const el=document.getElementById(k);
+    if(el) localStorage.setItem(k,el.value.trim());
+  });
+  showOk(ex);
+  // test connection immediately
+  if(ex==='hl') fetchHL().then(()=>updateAll());
+  if(ex==='lt') fetchLT().then(()=>updateAll());
+  if(ex==='at') fetchAT().then(()=>updateAll());
+}
+
+function showOk(ex){
+  const ok=document.getElementById('ok-'+ex);
+  ok.style.display='block';
+  setTimeout(()=>ok.style.display='none',2500);
+}
+
+function cfg(k){ return localStorage.getItem(k)||''; }
+
+// ══════════════════════════════════════════════════
+// AUTO-REFRESH
+// ══════════════════════════════════════════════════
+function toggleAR(){
+  S.arOn=!S.arOn;
+  document.getElementById('artog').classList.toggle('on',S.arOn);
+  localStorage.setItem('ar',S.arOn?'1':'0');
+  if(S.arOn) S.arTimer=setInterval(fetchAll,30000);
+  else clearInterval(S.arTimer);
+}
+
+// ══════════════════════════════════════════════════
+// FETCH ALL
+// ══════════════════════════════════════════════════
+async function fetchAll(){
+  const btn=document.getElementById('rfbtn');
+  btn.classList.add('spin');
+  S.byDay={};
+  await Promise.allSettled([fetchHL(), fetchLT(), fetchAT()]);
+  btn.classList.remove('spin');
+  updateAll();
+  const now=new Date();
+  document.getElementById('htime').textContent=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const dot=document.getElementById('hdot');
+  dot.className='hdr-dot'+(S.hl.ok||S.lt.ok||S.at.ok?' live':'');
+}
+
+// ══════════════════════════════════════════════════
+// HYPERLIQUID API  (CORS abierto, POST público)
+// ══════════════════════════════════════════════════
+async function hlPost(body){
+  const r=await fetch(HL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+async function fetchHL(){
+  const addr=cfg('hl_addr').trim();
+  if(!addr){ S.hl.err='Configura tu wallet address en ⚙ Config'; return; }
+  S.hl.err='';
+
+  try {
+    // clearinghouseState → balance + posiciones
+    const cs = await hlPost({type:'clearinghouseState', user:addr});
+    // Balance = accountValue del cross margin summary
+    const ms = cs.crossMarginSummary || cs.marginSummary || {};
+    S.hl.bal = parseFloat(ms.accountValue||'0');
+
+    // Posiciones abiertas
+    const aps = cs.assetPositions || [];
+    S.hl.pos = aps
+      .filter(ap => parseFloat(ap.position?.szi||'0') !== 0)
+      .map(ap => {
+        const p = ap.position;
+        const sz = parseFloat(p.szi||'0');
+        return {
+          market: p.coin,
+          side: sz>0 ? 'LONG':'SHORT',
+          size: Math.abs(sz),
+          entryPx: parseFloat(p.entryPx||'0'),
+          unrealizedPnl: parseFloat(p.unrealizedPnl||'0'),
+          leverage: p.leverage?.value ?? '—',
+          liqPx: parseFloat(p.liquidationPx||'0'),
+        };
+      });
+    S.hl.ok=true;
+    showErr('hl','');
+  } catch(e){
+    S.hl.err='Error cargando cuenta HL: '+e.message;
+    showErr('hl', S.hl.err);
+    S.hl.ok=false;
+    return;
+  }
+
+  try {
+    // Trades / fills recientes
+    const fills = await hlPost({type:'userFills', user:addr});
+    S.hl.trades = (fills||[]).slice(0,200).map(f=>({
+      market: f.coin,
+      side: f.side==='B'?'BUY':'SELL',
+      price: parseFloat(f.px||'0'),
+      size: parseFloat(f.sz||'0'),
+      realizedPnl: parseFloat(f.closedPnl||'0'),
+      fee: parseFloat(f.fee||'0'),
+      time: f.time,
+      _ex:'hl'
+    }));
+    indexByDay(S.hl.trades);
+  } catch(e){ console.warn('HL fills:', e.message); }
+
+  try {
+    // Historial de depósitos/retiros
+    const ledger = await hlPost({type:'userNonFundingLedgerUpdates', user:addr, startTime: Date.now()-180*86400000});
+    S.hl.tx = (ledger||[]).slice(0,50).map(l=>{
+      const delta=l.delta||{};
+      const isD = delta.type==='deposit'||delta.type==='vaultDeposit';
+      const amt = parseFloat(delta.usdc||delta.amount||'0');
+      return { type:isD?'deposit':'withdraw', amount:Math.abs(amt), time:l.time };
+    });
+  } catch(e){ console.warn('HL ledger:', e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// LIGHTER API
+// ══════════════════════════════════════════════════
+async function fetchLT(){
+  const idx = cfg('lt_idx').trim() || '0';
+  if(!idx && !cfg('lt_addr')){ S.lt.err='Configura tu Account Index en ⚙ Config'; return; }
+  S.lt.err='';
+
+  try {
+    const r=await fetch(`${LT}/api/v1/account?by=index&value=${idx}`,{
+      headers:{'Accept':'application/json','Content-Type':'application/json'}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status+' — '+await r.text());
+    const d=await r.json();
+    // Intentar varios campos de balance
+    S.lt.bal = parseFloat(
+      d.portfolio_value ?? d.collateral ?? d.cross_collateral ??
+      d.account_value ?? d.equity ?? '0'
+    );
+    S.lt.ok=true;
+    showErr('lt','');
+  } catch(e){
+    S.lt.err='Error Lighter: '+e.message;
+    showErr('lt', S.lt.err);
+    S.lt.ok=false;
+    return;
+  }
+
+  try {
+    const r=await fetch(`${LT}/api/v1/positions?account_index=${idx}`);
+    if(r.ok){
+      const d=await r.json();
+      const raw = d.positions||d||[];
+      S.lt.pos=(Array.isArray(raw)?raw:[]).map(p=>({
+        market:p.market||p.market_id||'—',
+        side:p.side||p.position_side||'—',
+        size:parseFloat(p.base_amount||p.size||'0'),
+        entryPx:parseFloat(p.avg_price||p.entry_price||'0'),
+        unrealizedPnl:parseFloat(p.unrealized_pnl||'0'),
+        leverage:p.leverage||'—',
+        liqPx:parseFloat(p.liquidation_price||'0'),
+      }));
+    }
+  } catch(e){ console.warn('LT pos:',e.message); }
+
+  try {
+    const r=await fetch(`${LT}/api/v1/trades?account_index=${idx}&limit=100`);
+    if(r.ok){
+      const d=await r.json();
+      S.lt.trades=(d.trades||d||[]).map(t=>({
+        market:t.market||'—', side:t.side||'—',
+        price:parseFloat(t.price||t.fill_price||'0'),
+        size:parseFloat(t.base_amount||t.qty||'0'),
+        realizedPnl:parseFloat(t.realized_pnl||'0'),
+        fee:parseFloat(t.fee||'0'), time:t.created_at||t.time,
+        _ex:'lt'
+      }));
+      indexByDay(S.lt.trades);
+    }
+  } catch(e){ console.warn('LT trades:',e.message); }
+
+  try {
+    const r=await fetch(`${LT}/api/v1/transfers?account_index=${idx}&limit=50`);
+    if(r.ok){
+      const d=await r.json();
+      S.lt.tx=(d.transfers||d||[]).map(t=>({
+        type:parseFloat(t.amount||'0')>0?'deposit':'withdraw',
+        amount:Math.abs(parseFloat(t.amount||'0')),
+        time:t.created_at||t.time
+      }));
+    }
+  } catch(e){ console.warn('LT tx:',e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// ASTER API  — HMAC-SHA256
+// ══════════════════════════════════════════════════
+async function hmac(secret,msg){
+  const enc=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const sig=await crypto.subtle.sign('HMAC',key,enc.encode(msg));
+  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function atFetch(path,params={}){
+  const k=cfg('at_key'),s=cfg('at_sec');
+  if(!k||!s) return null;
+  const ts=Date.now();
+  const qp={...params,timestamp:ts,recvWindow:5000};
+  const qs=Object.entries(qp).map(([a,b])=>`${a}=${b}`).join('&');
+  const sig=await hmac(s,qs);
+  const r=await fetch(`${AT}${path}?${qs}&signature=${sig}`,{headers:{'X-MBX-APIKEY':k}});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+async function fetchAT(){
+  if(!cfg('at_key')){ S.at.err='Configura tu API Key de Aster en ⚙ Config'; return; }
+  S.at.err='';
+  try {
+    const d=await atFetch('/fapi/v2/balance');
+    if(d){
+      const u=d.find(a=>a.asset==='USDT'||a.asset==='USDC');
+      S.at.bal=u?parseFloat(u.balance):0;
+      S.at.ok=true;
+      showErr('at','');
+    }
+  } catch(e){
+    S.at.err='Error Aster: '+e.message+' (puede ser CORS — activa la extensión)';
+    showErr('at',S.at.err);
+    S.at.ok=false;
+    return;
+  }
+  try {
+    const d=await atFetch('/fapi/v2/positionRisk');
+    if(d) S.at.pos=d.filter(p=>parseFloat(p.positionAmt)!==0).map(p=>({
+      market:p.symbol, side:parseFloat(p.positionAmt)>0?'LONG':'SHORT',
+      size:Math.abs(parseFloat(p.positionAmt||'0')),
+      entryPx:parseFloat(p.entryPrice||'0'),
+      unrealizedPnl:parseFloat(p.unrealizedProfit||'0'),
+      leverage:p.leverage||'—', liqPx:parseFloat(p.liquidationPrice||'0'),
+    }));
+  } catch(e){ console.warn('AT pos:',e.message); }
+  try {
+    const d=await atFetch('/fapi/v1/userTrades',{limit:100});
+    if(d){
+      S.at.trades=d.map(t=>({
+        market:t.symbol,side:t.side,
+        price:parseFloat(t.price||'0'),size:parseFloat(t.qty||'0'),
+        realizedPnl:parseFloat(t.realizedPnl||'0'),
+        fee:parseFloat(t.commission||'0'),time:t.time,_ex:'at'
+      }));
+      indexByDay(S.at.trades);
+    }
+  } catch(e){ console.warn('AT trades:',e.message); }
+  try {
+    const d=await atFetch('/fapi/v1/income',{limit:50,incomeType:'TRANSFER'});
+    if(d) S.at.tx=d.map(t=>({
+      type:parseFloat(t.income||'0')>0?'deposit':'withdraw',
+      amount:Math.abs(parseFloat(t.income||'0')),time:t.time
+    }));
+  } catch(e){ console.warn('AT tx:',e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// ERROR DISPLAY
+// ══════════════════════════════════════════════════
+function showErr(ex, msg){
+  const el=document.getElementById('err-'+ex);
+  if(!el) return;
+  if(msg){ el.textContent='⚠ '+msg; el.style.display='block'; }
+  else el.style.display='none';
+  // Also show in overview
+  const errov=document.getElementById('errov');
+  const errs=[S.hl.err,S.lt.err,S.at.err].filter(Boolean);
+  if(errs.length){ errov.textContent=errs.join('\n'); errov.style.display='block'; }
+  else errov.style.display='none';
+}
+
+// ══════════════════════════════════════════════════
+// INDEX TRADES BY DAY
+// ══════════════════════════════════════════════════
+function indexByDay(trades){
+  trades.forEach(t=>{
+    const ts=t.time; if(!ts) return;
+    const d=new Date(typeof ts==='number'?ts:Date.parse(ts));
+    if(isNaN(d)) return;
+    const key=d.toISOString().split('T')[0];
+    if(!S.byDay[key]) S.byDay[key]=[];
+    S.byDay[key].push(t);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// FORMAT HELPERS
+// ══════════════════════════════════════════════════
+function f$(v,d=2){
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  const n=parseFloat(v);
+  if(Math.abs(n)>=10000) return '$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
+  if(Math.abs(n)>=100) return '$'+n.toFixed(1);
+  return '$'+n.toFixed(d);
+}
+function fpnl(v){
+  if(v===null||v===undefined||isNaN(v)) return '<span>—</span>';
+  const n=parseFloat(v),c=n>=0?'pos':'neg',s=n>=0?'+':'';
+  return `<span class="${c}">${s}${f$(n)}</span>`;
+}
+function fdt(ts){
+  if(!ts) return '—';
+  return new Date(typeof ts==='number'?ts:Date.parse(ts))
+    .toLocaleString('es-ES',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function setEl(id,v){ const e=document.getElementById(id); if(e) e.innerHTML=v; }
+
+// ══════════════════════════════════════════════════
+// UPDATE ALL VIEWS
+// ══════════════════════════════════════════════════
+function updateAll(){
+  updOverview(); updPnl(); updPositions(); updTransfers();
+  renderCal(); drawChart();
+}
+
+function updOverview(){
+  const hl=S.hl.bal??0, lt=S.lt.bal??0, at=S.at.bal??0;
+  setEl('v-hlbal', S.hl.bal!==null?f$(hl):'—');
+  setEl('v-ltbal', S.lt.bal!==null?f$(lt):'—');
+  setEl('v-atbal', S.at.bal!==null?f$(at):'—');
+  const tot=hl+lt+at;
+  setEl('v-total', tot>0?f$(tot):'—');
+
+  let unreal=0;
+  [...S.hl.pos,...S.lt.pos,...S.at.pos].forEach(p=>unreal+=p.unrealizedPnl||0);
+  setEl('v-unreal', fpnl(unreal)||'—');
+
+  const today=new Date().toISOString().split('T')[0];
+  let todPnl=0;
+  (S.byDay[today]||[]).forEach(t=>todPnl+=t.realizedPnl||0);
+  setEl('v-today', fpnl(todPnl));
+  setEl('v-opencnt', S.hl.pos.length+S.lt.pos.length+S.at.pos.length);
+
+  // Recent trades
+  const all=[...S.hl.trades,...S.lt.trades,...S.at.trades]
+    .sort((a,b)=>(b.time||0)-(a.time||0)).slice(0,15);
+  setEl('v-recent', all.length>0
+    ? `<div class="twrap"><table><thead><tr><th>EX</th><th>Par</th><th>Lado</th><th>Px</th><th>PnL</th><th>Hora</th></tr></thead><tbody>
+    ${all.map(t=>`<tr>
+      <td><span class="xb ${t._ex}">${t._ex.toUpperCase()}</span></td>
+      <td>${t.market}</td>
+      <td><span class="${t.side==='BUY'||t.side==='LONG'?'sl':'ss'}">${t.side}</span></td>
+      <td>${parseFloat(t.price||0).toFixed(2)}</td>
+      <td>${fpnl(t.realizedPnl)}</td>
+      <td style="color:var(--muted)">${fdt(t.time)}</td>
+    </tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty"><div class="ei">📊</div><p>Sin trades — pulsa ↻</p></div>');
+}
+
+function updPnl(){
+  let hlP=0,ltP=0,atP=0,fees=0;
+  S.hl.trades.forEach(t=>{hlP+=t.realizedPnl||0;fees+=t.fee||0;});
+  S.lt.trades.forEach(t=>{ltP+=t.realizedPnl||0;fees+=t.fee||0;});
+  S.at.trades.forEach(t=>{atP+=t.realizedPnl||0;fees+=t.fee||0;});
+  const hlU=S.hl.pos.reduce((s,p)=>s+(p.unrealizedPnl||0),0);
+  const ltU=S.lt.pos.reduce((s,p)=>s+(p.unrealizedPnl||0),0);
+  const atU=S.at.pos.reduce((s,p)=>s+(p.unrealizedPnl||0),0);
+  setEl('v-totalreal', fpnl(hlP+ltP+atP));
+  setEl('v-fees', fees>0?f$(fees):'—');
+  setEl('v-hlpnl', fpnl(hlP+hlU));
+  setEl('v-ltpnl', fpnl(ltP+ltU));
+  setEl('v-atpnl', fpnl(atP+atU));
+  renderPnlTable();
+}
+
+function setPnlTab(ex,el){
+  S.pnlTab=ex;
+  document.querySelectorAll('.itab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderPnlTable();
+}
+
+function renderPnlTable(){
+  const trades=S[S.pnlTab].trades.slice(0,30);
+  setEl('v-pnltable', trades.length>0
+    ? `<div class="twrap"><table><thead><tr><th>Par</th><th>Lado</th><th>Precio</th><th>PnL</th><th>Fee</th><th>Fecha</th></tr></thead><tbody>
+    ${trades.map(t=>`<tr>
+      <td>${t.market}</td>
+      <td><span class="${t.side==='BUY'||t.side==='LONG'?'sl':'ss'}">${t.side}</span></td>
+      <td>${parseFloat(t.price||0).toFixed(2)}</td>
+      <td>${fpnl(t.realizedPnl)}</td>
+      <td style="color:var(--muted)">${f$(t.fee||0)}</td>
+      <td style="color:var(--muted)">${fdt(t.time)}</td>
+    </tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty"><div class="ei">📋</div><p>Sin trades en este exchange</p></div>');
+}
+
+function updPositions(){
+  const ptable=(pos,id)=>{
+    setEl(id, pos.length>0
+      ? `<div class="twrap"><table><thead><tr><th>Par</th><th>Lado</th><th>Tam.</th><th>Entrada</th><th>PnL</th><th>Lev</th><th>Liq.</th></tr></thead><tbody>
+      ${pos.map(p=>`<tr>
+        <td>${p.market}</td>
+        <td><span class="${p.side==='LONG'?'sl':'ss'}">${p.side}</span></td>
+        <td>${p.size.toFixed(4)}</td>
+        <td>${f$(p.entryPx)}</td>
+        <td>${fpnl(p.unrealizedPnl)}</td>
+        <td>${p.leverage}×</td>
+        <td style="color:var(--red)">${f$(p.liqPx)}</td>
+      </tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty"><div class="ei">✓</div><p>Sin posiciones abiertas</p></div>');
+  };
+  ptable(S.hl.pos,'v-hlpos');
+  ptable(S.lt.pos,'v-ltpos');
+  ptable(S.at.pos,'v-atpos');
+}
+
+function updTransfers(){
+  let dep=0,wit=0;
+  const rTx=(txList,id)=>{
+    if(!txList||txList.length===0){
+      setEl(id,'<div class="empty"><div class="ei">⇅</div><p>Sin historial</p></div>');
+      return;
+    }
+    setEl(id, txList.slice(0,20).map(tx=>{
+      const isD=tx.type==='deposit';
+      if(isD) dep+=tx.amount||0; else wit+=tx.amount||0;
+      return `<div class="txitem ${isD?'dep':'wit'}">
+        <div class="txleft">
+          <div class="txico">${isD?'↓':'↑'}</div>
+          <div><div class="txtype" style="color:${isD?'var(--green)':'var(--red)'}">${isD?'DEPÓSITO':'RETIRO'}</div>
+          <div class="txdate">${fdt(tx.time)}</div></div>
+        </div>
+        <div class="txamt" style="color:${isD?'var(--green)':'var(--red)'}">${isD?'+':'-'}${f$(tx.amount)}</div>
+      </div>`;
+    }).join(''));
+  };
+  rTx(S.hl.tx,'v-hltx');
+  rTx(S.lt.tx,'v-lttx');
+  rTx(S.at.tx,'v-attx');
+  setEl('v-dep', dep>0?f$(dep):'—');
+  setEl('v-wit', wit>0?f$(wit):'—');
+  const net=dep-wit;
+  setEl('v-net', net!==0?fpnl(net):'—');
+}
+
+// ══════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════
+const MNAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function renderCal(){
+  setEl('v-calmonth',`${MNAMES[S.calM]} ${S.calY}`);
+  const today=new Date();
+  const fd=new Date(S.calY,S.calM,1).getDay();
+  const dim=new Date(S.calY,S.calM+1,0).getDate();
+  let h=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].map(d=>`<div class="caldh">${d}</div>`).join('');
+  for(let i=0;i<fd;i++) h+=`<div class="calday empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const key=`${S.calY}-${String(S.calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ts=S.byDay[key]||[];
+    const isT=today.getDate()===d&&today.getMonth()===S.calM&&today.getFullYear()===S.calY;
+    let pnl=0; ts.forEach(t=>pnl+=t.realizedPnl||0);
+    let cls='calday'+(isT?' today':'')+(pnl>0?' profit':pnl<0?' loss':'');
+    h+=`<div class="${cls}" onclick="calDay('${key}')">
+      <div class="caldn">${d}</div>
+      ${pnl!==0?`<div class="calpnl ${pnl>0?'pos':'neg'}">${pnl>0?'+':''}${pnl.toFixed(0)}</div>`:''}
+    </div>`;
+  }
+  setEl('v-calgrid',h);
+}
+
+function calDay(key){
+  const ts=S.byDay[key]||[];
+  setEl('v-caldt','Trades: '+key);
+  setEl('v-caldetail',
+    `<div class="thead"><div class="ttitle">${ts.length} trades el ${key}</div></div>`+
+    (ts.length>0
+      ? `<div class="twrap"><table><thead><tr><th>EX</th><th>Par</th><th>Lado</th><th>Precio</th><th>PnL</th><th>Hora</th></tr></thead><tbody>
+      ${ts.map(t=>`<tr>
+        <td><span class="xb ${t._ex}">${t._ex.toUpperCase()}</span></td>
+        <td>${t.market}</td>
+        <td><span class="${t.side==='BUY'||t.side==='LONG'?'sl':'ss'}">${t.side}</span></td>
+        <td>${parseFloat(t.price||0).toFixed(2)}</td>
+        <td>${fpnl(t.realizedPnl)}</td>
+        <td style="color:var(--muted)">${fdt(t.time)}</td>
+      </tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty"><div class="ei">✓</div><p>Sin trades este día</p></div>'));
+}
+
+function calPrev(){ if(S.calM===0){S.calM=11;S.calY--;}else S.calM--; renderCal(); }
+function calNext(){ if(S.calM===11){S.calM=0;S.calY++;}else S.calM++; renderCal(); }
+
+// ══════════════════════════════════════════════════
+// CHART
+// ══════════════════════════════════════════════════
+function setRange(r,el){
+  S.range=r;
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  drawChart();
+}
+
+function drawChart(){
+  const cv=document.getElementById('pnlcv'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const days=S.range==='7d'?7:S.range==='30d'?30:90;
+  const now=new Date();
+  const labels=[],values=[];
+  let cum=0;
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    const key=d.toISOString().split('T')[0];
+    let dp=0; (S.byDay[key]||[]).forEach(t=>dp+=t.realizedPnl||0);
+    cum+=dp; labels.push(key.slice(5)); values.push(parseFloat(cum.toFixed(2)));
+  }
+  const W=cv.offsetWidth||300, H=170;
+  cv.width=W; cv.height=H;
+  ctx.clearRect(0,0,W,H);
+
+  if(values.every(v=>v===0)){
+    ctx.fillStyle='#4a6080'; ctx.font='11px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('Sin datos de PnL todavía — pulsa ↻', W/2, H/2);
+    return;
+  }
+  const mn=Math.min(...values),mx=Math.max(...values),rng=mx-mn||1;
+  const P={t:18,b:24,l:44,r:6};
+  const xs=i=>P.l+(i/(labels.length-1||1))*(W-P.l-P.r);
+  const ys=v=>P.t+(1-(v-mn)/rng)*(H-P.t-P.b);
+  const lastV=values[values.length-1],col=lastV>=0?'#00ff87':'#ff3b5c';
+
+  // Grid lines
+  ctx.strokeStyle='rgba(26,37,53,.8)'; ctx.lineWidth=1;
+  for(let g=0;g<=3;g++){
+    const y=P.t+(g/3)*(H-P.t-P.b);
+    ctx.beginPath(); ctx.moveTo(P.l,y); ctx.lineTo(W-P.r,y); ctx.stroke();
+    ctx.fillStyle='#4a6080'; ctx.font='8px Space Mono'; ctx.textAlign='right';
+    ctx.fillText(f$(mx-(g/3)*rng,0),P.l-3,y+3);
+  }
+  // Fill
+  const gr=ctx.createLinearGradient(0,P.t,0,H-P.b);
+  gr.addColorStop(0,lastV>=0?'rgba(0,255,135,.18)':'rgba(255,59,92,.18)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();
+  values.forEach((v,i)=>i===0?ctx.moveTo(xs(i),ys(v)):ctx.lineTo(xs(i),ys(v)));
+  ctx.lineTo(xs(values.length-1),H-P.b); ctx.lineTo(xs(0),H-P.b);
+  ctx.closePath(); ctx.fillStyle=gr; ctx.fill();
+  // Line
+  ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.lineJoin='round';
+  values.forEach((v,i)=>i===0?ctx.moveTo(xs(i),ys(v)):ctx.lineTo(xs(i),ys(v)));
+  ctx.stroke();
+  // X labels
+  ctx.fillStyle='#4a6080'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+  const step=Math.ceil(labels.length/5);
+  labels.forEach((l,i)=>{ if(i%step===0) ctx.fillText(l,xs(i),H-5); });
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+loadCfg();
+renderCal();
+// Si ya hay credenciales guardadas, cargar datos automáticamente
+const hasCreds = cfg('hl_addr')||cfg('lt_idx')||cfg('at_key');
+if(hasCreds){
+  fetchAll();
+} else {
+  // Ir a Config si no hay credenciales
+  document.querySelectorAll('.tab')[5].click();
+}
+</script>
+</body>
+</html>
